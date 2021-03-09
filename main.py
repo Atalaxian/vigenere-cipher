@@ -8,13 +8,13 @@ from error_window import Ui_widget
 class MyException(Exception):
     text = None
 
-    def __init__(self, text):
+    def __init__(self, text) -> None:
         super().__init__()
         self.text = text
 
 
 class ErrorWindow(QWidget, Ui_widget):
-    def __init__(self, text):
+    def __init__(self, text) -> None:
         super().__init__()
         self.setupUi(self)
         self.setWindowTitle('Ошибка')
@@ -51,6 +51,18 @@ class MainWindow(QWidget, Ui_Form):
                 pointer += 1
             yield char
 
+    def create_alphabets(self, need_alphabet, key, reverse=False):
+        alphabets = []
+        for elem in key:
+            mydict = {}
+            shift = need_alphabet.index(elem)
+            for x, next_symbol in enumerate(self.next_symbol(need_alphabet, shift, len(need_alphabet))):
+                mydict[need_alphabet[x]] = next_symbol
+            if reverse:
+                mydict = {v: k for k, v in mydict.items()}
+            alphabets.append(mydict)
+        return alphabets
+
     @QtCore.pyqtSlot()
     def code_text_vigenere(self) -> None:
         self.code_end.clear()
@@ -76,20 +88,22 @@ class MainWindow(QWidget, Ui_Form):
         key = key.lower()
         text = text.lower()
         code_text = ''
-        alphabets = []
         need_alphabet = None
+        # Выбираем необходимый алфавит
         if self.code_rus_short.isChecked():
             need_alphabet = self.short_alphabet
         elif self.code_rus.isChecked():
             need_alphabet = self.full_alphabet
         elif self.code_en.isChecked():
             need_alphabet = self.alphabet_en
-        for elem in key:
-            mydict = {}
-            shift = need_alphabet.index(elem)
-            for x, next_symbol in enumerate(self.next_symbol(need_alphabet, shift, len(need_alphabet))):
-                mydict[need_alphabet[x]] = next_symbol
-            alphabets.append(mydict)
+        # Формируем по алфавиту для каждого символа ключа
+        try:
+            alphabets = self.create_alphabets(need_alphabet, key)
+        except ValueError:
+            self.error_window = ErrorWindow('Не удалось сформировать алфавиты.')
+            self.error_window.show()
+            return
+        # Кодируем текст
         for char in text:
             if ord(char) < left_border_lower or ord(char) > right_border_lower:
                 code_text += char
@@ -126,21 +140,22 @@ class MainWindow(QWidget, Ui_Form):
         key = key.lower()
         text = text.lower()
         code_text = ''
-        alphabets = []
         need_alphabet = None
+        # Выбираем необходимый алфавит
         if self.decode_rus_short.isChecked():
             need_alphabet = self.short_alphabet
         elif self.decode_rus.isChecked():
             need_alphabet = self.full_alphabet
         elif self.decode_en.isChecked():
             need_alphabet = self.alphabet_en
-        for elem in key:
-            mydict = {}
-            shift = need_alphabet.index(elem)
-            for x, next_symbol in enumerate(self.next_symbol(need_alphabet, shift, len(need_alphabet))):
-                mydict[need_alphabet[x]] = next_symbol
-            mydict = {v: k for k, v in mydict.items()}
-            alphabets.append(mydict)
+        # Формируем по обратному алфавиту для каждого символа ключа
+        try:
+            alphabets = self.create_alphabets(need_alphabet, key, reverse=True)
+        except ValueError:
+            self.error_window = ErrorWindow('Не удалось сформировать алфавиты.')
+            self.error_window.show()
+            return
+        # Декодируем текст
         for char in text:
             if (ord(char) < left_border_lower or ord(char) > right_border_lower) and char != 'ё':
                 code_text += char
