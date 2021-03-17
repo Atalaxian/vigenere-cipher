@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog
-from PyQt5 import QtCore
+from PyQt5 import QtCore, Qt
 from main_window import Ui_Form
 from error_window import Ui_widget
 
@@ -18,6 +18,7 @@ class ErrorWindow(QWidget, Ui_widget):
         super().__init__()
         self.setupUi(self)
         self.setWindowTitle('Ошибка')
+        self.setWindowModality(Qt.Qt.ApplicationModal)
         self.error_label.setText(text)
 
 
@@ -80,7 +81,7 @@ class MainWindow(QWidget, Ui_Form):
         right_border_lower = None
         if self.code_rus.isChecked() or self.code_rus_short.isChecked():
             left_border_lower = 1072
-            right_border_lower = 1103
+            right_border_lower = 1105
         elif self.code_en.isChecked():
             left_border_lower = 97
             right_border_lower = 122
@@ -103,7 +104,7 @@ class MainWindow(QWidget, Ui_Form):
             self.error_window = ErrorWindow('Не удалось сформировать алфавиты.')
             self.error_window.show()
             return
-        # Кодируем текст
+        # Шифруем текст
         for char in text:
             if ord(char) < left_border_lower or ord(char) > right_border_lower:
                 code_text += char
@@ -155,7 +156,7 @@ class MainWindow(QWidget, Ui_Form):
             self.error_window = ErrorWindow('Не удалось сформировать алфавиты.')
             self.error_window.show()
             return
-        # Декодируем текст
+        # Дешифруем текст
         for char in text:
             if (ord(char) < left_border_lower or ord(char) > right_border_lower) and char != 'ё':
                 code_text += char
